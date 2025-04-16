@@ -1,6 +1,6 @@
 # leadinvr-jwt-guard
-JWT Guard for NestJS framework
 
+JWT Guard for NestJS framework
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@leadinvr/jwt-guard">
@@ -33,7 +33,6 @@ npm i @leadinvr/jwt-guard
 
 ```js
 JwtGuardModule.registerAsync({
-    isGlobal: true,
     autoRegister: true
     inject: [ConfigService, CacheService],
     useFactory: (configs: ConfigService, cache: CacheService) => {
@@ -52,7 +51,15 @@ JwtGuardModule.registerAsync({
 }),
 ```
 
+### If autoRegister is false, you need to add provider manually
+
+```js
+  providers: [
+        { provide: APP_GUARD, useClass: JwtAuthGuard },
+        ...
+    ]
+```
+
 # Trouble Shooting
 
-* If autoRegister, JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
-
+-   If autoRegister, JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
