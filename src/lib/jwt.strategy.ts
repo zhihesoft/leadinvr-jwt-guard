@@ -27,9 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 throw new UnauthorizedException("Token is revoked");
             }
         }
-        if (this.options.transform) {
-            payload = await this.options.transform(payload);
-        }
         return payload;
     }
 
