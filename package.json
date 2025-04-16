@@ -1,6 +1,6 @@
 {
     "name": "@leadinvr/jwt-guard",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "JWT guard for nestjs",
     "main": "./dist/index.js",
     "scripts": {
