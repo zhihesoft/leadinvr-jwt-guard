@@ -51,3 +51,7 @@ JwtGuardModule.registerAsync({
 }),
 ```
 
+# Trouble Shooting
+
+* JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
+
