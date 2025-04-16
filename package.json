@@ -1,0 +1,38 @@
+{
+  "name": "@leadinvr/jwt-guard",
+  "version": "1.0.0",
+  "description": "JWT guard for nestjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhihesoft/leadinvr-jwt-guard.git"
+  },
+  "keywords": [
+    "nestjs",
+    "jwt",
+    "guard"
+  ],
+  "author": "Stanley",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/zhihesoft/leadinvr-jwt-guard/issues"
+  },
+  "homepage": "https://github.com/zhihesoft/leadinvr-jwt-guard#readme",
+  "devDependencies": {
+    "@nestjs/common": "^11.0.17",
+    "@nestjs/core": "^11.0.17",
+    "@types/express": "^5.0.1",
+    "@types/passport-jwt": "^4.0.1"
+  },
+  "dependencies": {
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.5",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "reflect-metadata": "^0.2.2"
+  }
+}
