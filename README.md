@@ -33,9 +33,10 @@ npm i @leadinvr/jwt-guard
 
 ```js
 JwtGuardModule.registerAsync({
-    imports: [ConfigModule, RiskCacheModule],
-    inject: [ConfigService, RiskCacheService],
-    useFactory: (configs: ConfigService, cache: RiskCacheService) => {
+    isGlobal: true,
+    autoRegister: true
+    inject: [ConfigService, CacheService],
+    useFactory: (configs: ConfigService, cache: CacheService) => {
         const secret = configs.get<string>("JWT_SECRET");
         Failed.onFalsy(secret, () => "JWT_SECRET cannot be null or undefined");
         return {
@@ -53,5 +54,5 @@ JwtGuardModule.registerAsync({
 
 # Trouble Shooting
 
-* JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
+* If autoRegister, JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
 

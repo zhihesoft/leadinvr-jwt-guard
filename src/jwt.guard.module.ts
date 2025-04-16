@@ -3,28 +3,32 @@ import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./lib/jwt.authguard";
 import { JWT_GUARD_MODULE_OPTIONS } from "./lib/jwt.guard.contants";
 import { JWTGuardModuleAsyncOptions } from "./lib/jwt.guard.module.async.options";
-import { JWTGuardModuleOptions } from "./lib/jwt.guard.module.options";
+import { JWTGuardModuleSyncOptions } from "./lib/jwt.guard.module.sync.options";
 import { JwtStrategy } from "./lib/jwt.strategy";
 
 @Module({
     providers: [JwtAuthGuard, JwtStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class JwtGuardModule {
-
     /**
      * Sync register
-     * @param options 
-     * @returns 
+     * @param options
+     * @returns
      */
-    static register(options: JWTGuardModuleOptions): DynamicModule {
+    static register(options: JWTGuardModuleSyncOptions): DynamicModule {
+        const providers: Provider[] = [
+            JwtAuthGuard,
+            JwtStrategy,
+            { provide: JWT_GUARD_MODULE_OPTIONS, useValue: options },
+        ];
+        if (options.autoRegister) {
+            providers.push({ provide: APP_GUARD, useClass: JwtAuthGuard });
+        }
+
         return {
+            global: options.isGlobale || true,
             module: JwtGuardModule,
-            providers: [
-                JwtAuthGuard,
-                JwtStrategy,
-                { provide: JWT_GUARD_MODULE_OPTIONS, useValue: options },
-                { provide: APP_GUARD, useClass: JwtAuthGuard },
-            ],
+            providers,
             exports: [JwtAuthGuard],
         };
     }
@@ -47,9 +51,12 @@ export class JwtGuardModule {
 
         providers.push(JwtStrategy, JwtAuthGuard);
 
-        providers.push({ provide: APP_GUARD, useClass: JwtAuthGuard });
+        if (options.autoRegister) {
+            providers.push({ provide: APP_GUARD, useClass: JwtAuthGuard });
+        }
 
         return {
+            global: options.isGlobale || true,
             module: JwtGuardModule,
             imports: options.imports || [],
             providers,
