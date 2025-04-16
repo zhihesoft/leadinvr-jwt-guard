@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
         if (this.options.check) {
             const pass = await this.options.check(token);
-            if (pass) {
+            if (!pass) {
                 throw new UnauthorizedException("Token is revoked");
             }
         }
