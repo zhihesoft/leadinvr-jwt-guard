@@ -1,18 +1,18 @@
-import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { JWT_GUARD_MODULE_OPTIONS } from "./jwt.guard.contants";
 import { JWTGuardModuleOptions } from "./jwt.guard.module.options";
+import { JwtGuardService } from "./jwt.guard.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(@Inject(JWT_GUARD_MODULE_OPTIONS) private readonly options: JWTGuardModuleOptions) {
+    constructor(options: JWTGuardModuleOptions, private readonly jwtGuards: JwtGuardService) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
             passReqToCallback: true,
-            secretOrKey: options.jwtSecret,
+            secretOrKey: options.secret,
         });
     }
 
@@ -21,11 +21,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         if (!token) {
             throw new UnauthorizedException("Token is missing");
         }
-        if (this.options.check) {
-            const pass = await this.options.check(token);
-            if (!pass) {
-                throw new UnauthorizedException("Token is revoked");
-            }
+
+        const isRevoked = await this.jwtGuards.isRevokedToken(token);
+        if (isRevoked) {
+            throw new UnauthorizedException("Token is revoked");
         }
         return payload;
     }

@@ -1,14 +1,23 @@
-import { DynamicModule, Module, Provider } from "@nestjs/common";
+import { CacheService } from "@leadinvr/cache";
+import { DynamicModule, Provider } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
+import { JwtModule, JwtService } from "@nestjs/jwt";
 import { JwtAuthGuard } from "./lib/jwt.authguard";
-import { JWT_GUARD_MODULE_OPTIONS } from "./lib/jwt.guard.contants";
 import { JWTGuardModuleAsyncOptions } from "./lib/jwt.guard.module.async.options";
+import { JWTGuardModuleOptions } from "./lib/jwt.guard.module.options";
 import { JWTGuardModuleSyncOptions } from "./lib/jwt.guard.module.sync.options";
+import { JwtGuardService } from "./lib/jwt.guard.service";
 import { JwtStrategy } from "./lib/jwt.strategy";
 
-@Module({
-    providers: [JwtAuthGuard, JwtStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
-})
+/**
+ * Module for JWT Guard
+ * This module provides JWT authentication guard and strategy.
+ * It can be registered synchronously or asynchronously.
+ * It also supports global registration and auto-registration as an application guard.
+ * It depends on the CacheService for token revocation checks.
+ * So you should register the @leadinvr/cache module before using this module.
+ * @module JwtGuardModule
+ */
 export class JwtGuardModule {
     /**
      * Sync register
@@ -19,17 +28,20 @@ export class JwtGuardModule {
         const providers: Provider[] = [
             JwtAuthGuard,
             JwtStrategy,
-            { provide: JWT_GUARD_MODULE_OPTIONS, useValue: options },
+            JwtService,
+            JwtGuardService,
+            { provide: JWTGuardModuleOptions, useValue: options },
         ];
         if (options.autoRegister) {
             providers.push({ provide: APP_GUARD, useClass: JwtAuthGuard });
         }
 
         return {
-            global: options.isGlobale || true,
             module: JwtGuardModule,
+            global: options.isGlobal || true,
             providers,
-            exports: [JwtAuthGuard],
+            imports: [CacheService, JwtModule.register({ secret: options.secret })],
+            exports: [JwtAuthGuard, JwtGuardService],
         };
     }
 
@@ -43,24 +55,34 @@ export class JwtGuardModule {
 
         if (options.useFactory) {
             providers.push({
-                provide: JWT_GUARD_MODULE_OPTIONS,
+                provide: JWTGuardModuleOptions,
                 useFactory: options.useFactory,
                 inject: options.inject || [],
             });
         }
 
-        providers.push(JwtStrategy, JwtAuthGuard);
+        providers.push(JwtStrategy, JwtAuthGuard, JwtGuardService);
 
         if (options.autoRegister) {
             providers.push({ provide: APP_GUARD, useClass: JwtAuthGuard });
         }
 
         return {
-            global: options.isGlobale || true,
             module: JwtGuardModule,
-            imports: options.imports || [],
+            global: options.isGlobale || true,
+            imports: [
+                JwtModule.registerAsync({
+                    useFactory: (opt: JWTGuardModuleOptions) => {
+                        return {
+                            secret: opt.secret,
+                        };
+                    },
+                }),
+                CacheService,
+                ...(options.imports || []),
+            ],
             providers,
-            exports: [JwtAuthGuard],
+            exports: [JwtAuthGuard, JwtGuardService],
         };
     }
 }
