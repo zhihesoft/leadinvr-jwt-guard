@@ -1,17 +1,28 @@
 import { CacheService } from "@leadinvr/cache";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { JWTGuardModuleOptions } from "./jwt.guard.module.options";
+import { MODULE_OPTIONS_TOKEN } from "./jwt.guard.module-defination";
+
+export var jwtSecret: string = "";
 
 @Injectable()
 export class JwtGuardService {
     constructor(
+        @Inject(MODULE_OPTIONS_TOKEN)
+        private readonly options: JWTGuardModuleOptions,
         private readonly cache: CacheService,
         private readonly jwts: JwtService,
-    ) {}
+    ) {
+        jwtSecret = options.secret || "";
+    }
 
     private readonly revokeTokenCachePrefix = "jwt-revoke-tokens";
 
-    async signToken(payload: object, expiresIn: string = "30m"): Promise<string> {
+    async signToken(
+        payload: object,
+        expiresIn: string = "30m",
+    ): Promise<string> {
         return this.jwts.signAsync(payload, { expiresIn });
     }
 
