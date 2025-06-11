@@ -1,17 +1,16 @@
-import { CacheService } from "@leadinvr/cache";
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { JWTGuardModuleOptions } from "./jwt.guard.module.options";
 import { MODULE_OPTIONS_TOKEN } from "./jwt.guard.module-defination";
+import { JWTGuardModuleOptions } from "./jwt.guard.module.options";
+import { JwtRevokeTokenService } from "./jwt.revoke.token.service";
 
 export var jwtSecret: string = "";
 
 @Injectable()
 export class JwtGuardService {
     constructor(
-        @Inject(MODULE_OPTIONS_TOKEN)
-        private readonly options: JWTGuardModuleOptions,
-        private readonly cache: CacheService,
+        @Inject(MODULE_OPTIONS_TOKEN) options: JWTGuardModuleOptions,
+        private readonly revokes: JwtRevokeTokenService,
         private readonly jwts: JwtService,
     ) {
         jwtSecret = options.secret || "";
@@ -19,6 +18,13 @@ export class JwtGuardService {
 
     private readonly revokeTokenCachePrefix = "jwt-revoke-tokens";
 
+    /**
+     * Sign a JWT token
+     * This method signs a JWT token with the provided payload and expiration time.
+     * @param payload the payload object to sign.
+     * @param expiresIn expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms.js).  Eg: 60, "2 days", "10h", "7d"
+     * @returns
+     */
     async signToken(
         payload: object,
         expiresIn: string = "30m",
@@ -32,9 +38,8 @@ export class JwtGuardService {
      * @param token
      * @returns
      */
-    async isRevokedToken(token: string): Promise<boolean> {
-        const key = this.getTokenKey(token);
-        return this.cache.has(key);
+    isRevokedToken(token: string): Promise<boolean> {
+        return this.revokes.isRevoked(token);
     }
 
     /**
@@ -44,27 +49,6 @@ export class JwtGuardService {
      * @returns
      */
     async revokeToken(token: string): Promise<void> {
-        const parsed = this.jwts.decode(token, { json: true, complete: true }); // Decode the token to validate it
-        if (!parsed || !parsed.header || !parsed.header.alg) {
-            throw new Error("Invalid token format");
-        }
-        // get expires from the token
-        const expires = parsed.payload.exp;
-        if (!expires || typeof expires !== "number") {
-            throw new Error("Token does not have an expiration time");
-        }
-        const ttl = expires - Math.floor(Date.now() / 1000); // Calculate TTL in seconds
-        // Check if the token is expired
-        if (ttl <= 0) {
-            return;
-        }
-        // Store the token in cache to revoke it
-
-        const key = this.getTokenKey(token);
-        await this.cache.set(key, true, ttl); // Store for 7 days
-    }
-
-    private getTokenKey(token: string): string {
-        return `${this.revokeTokenCachePrefix}:${token}`;
+        await this.revokes.revoke(token); // Call the revoke method of JwtRevokeTokenService
     }
 }

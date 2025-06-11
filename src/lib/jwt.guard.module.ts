@@ -1,11 +1,11 @@
-import { CacheService } from "@leadinvr/cache";
-import { DynamicModule, Global, Module, Provider } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
-import { JwtModule, JwtService } from "@nestjs/jwt";
+import { JwtModule } from "@nestjs/jwt";
 import { JwtAuthGuard } from "./jwt.authguard";
-import { JwtGuardService, jwtSecret } from "./jwt.guard.service";
-import { JwtStrategy } from "./jwt.strategy";
 import { ConfigurableModuleClass } from "./jwt.guard.module-defination";
+import { JwtGuardService, jwtSecret } from "./jwt.guard.service";
+import { JwtRevokeTokenService } from "./jwt.revoke.token.service";
+import { JwtStrategy } from "./jwt.strategy";
 
 /**
  * Module for JWT Guard
@@ -19,7 +19,6 @@ import { ConfigurableModuleClass } from "./jwt.guard.module-defination";
 @Global()
 @Module({
     imports: [
-        CacheService,
         JwtModule.register({
             secretOrKeyProvider: () => jwtSecret,
         }),
@@ -28,6 +27,7 @@ import { ConfigurableModuleClass } from "./jwt.guard.module-defination";
         JwtAuthGuard,
         JwtStrategy,
         JwtGuardService,
+        JwtRevokeTokenService,
         { provide: APP_GUARD, useClass: JwtAuthGuard },
     ],
     exports: [JwtAuthGuard, JwtGuardService],
