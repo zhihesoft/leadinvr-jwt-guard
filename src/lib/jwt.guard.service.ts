@@ -1,22 +1,32 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
 import { MODULE_OPTIONS_TOKEN } from "./jwt.guard.module-defination";
 import { JWTGuardModuleOptions } from "./jwt.guard.module.options";
 import { JwtRevokeTokenService } from "./jwt.revoke.token.service";
 
-export var jwtSecret: string = "";
+import * as jwts from "jsonwebtoken";
 
 @Injectable()
 export class JwtGuardService {
     constructor(
-        @Inject(MODULE_OPTIONS_TOKEN) options: JWTGuardModuleOptions,
+        @Inject(MODULE_OPTIONS_TOKEN)
+        private readonly options: JWTGuardModuleOptions,
         private readonly revokes: JwtRevokeTokenService,
-        private readonly jwts: JwtService,
-    ) {
-        jwtSecret = options.secret || "";
-    }
+    ) {}
 
-    private readonly revokeTokenCachePrefix = "jwt-revoke-tokens";
+    /**
+     * Extract token from request
+     * This method extracts the JWT token from the request headers.
+     * @param req
+     * @returns
+     */
+    static extractTokenFromRequest(req: any) {
+        const authheader = req.headers["authorization"];
+        if (!authheader) {
+            return undefined;
+        }
+        const token = authheader.split(" ")[1];
+        return token;
+    }
 
     /**
      * Sign a JWT token
@@ -29,7 +39,31 @@ export class JwtGuardService {
         payload: object,
         expiresIn: string = "30m",
     ): Promise<string> {
-        return this.jwts.signAsync(payload, { expiresIn });
+        return jwts.sign(payload, this.options.secret, {
+            expiresIn,
+            algorithm: "HS256",
+            issuer: this.options.issuer ?? "jwt-guard",
+            audience: this.options.audience ?? "jwt-guard",
+        });
+    }
+
+    /**
+     * Decode a JWT token
+     * This method decodes a JWT token without verifying its signature.
+     * @param token
+     * @returns
+     */
+    async decodeToken(token: string): Promise<unknown> {
+        return new Promise((resolve, reject) => {
+            jwts.verify(
+                token,
+                this.options.secret,
+                { algorithms: ["HS256"] },
+                (err, decoded) => {
+                    resolve(decoded);
+                },
+            );
+        });
     }
 
     /**

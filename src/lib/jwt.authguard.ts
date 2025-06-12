@@ -1,8 +1,12 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
 
-import { TokenExpiredError } from "@nestjs/jwt";
+import { TokenExpiredError } from "jsonwebtoken";
 import { isPublicContext } from "./public.decorator";
 
 @Injectable()

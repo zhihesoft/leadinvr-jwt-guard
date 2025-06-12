@@ -5,17 +5,17 @@ import {
     OnModuleDestroy,
     OnModuleInit,
 } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
 import { createClient, RedisClientType } from "redis";
 import { MODULE_OPTIONS_TOKEN } from "./jwt.guard.module-defination";
 import { JWTGuardModuleOptions } from "./jwt.guard.module.options";
+
+import * as jwts from "jsonwebtoken";
 
 @Injectable()
 export class JwtRevokeTokenService implements OnModuleInit, OnModuleDestroy {
     constructor(
         @Inject(MODULE_OPTIONS_TOKEN)
         private readonly options: JWTGuardModuleOptions,
-        private readonly jwts: JwtService,
     ) {}
 
     private redis?: RedisClientType;
@@ -62,12 +62,14 @@ export class JwtRevokeTokenService implements OnModuleInit, OnModuleDestroy {
     }
 
     async revoke(token: string): Promise<void> {
-        const parsed = this.jwts.decode(token, { json: true, complete: true }); // Decode the token to validate it
+        const parsed = jwts.decode(token, { complete: true, json: true }); // Validate the token format
+
         if (!parsed || !parsed.header || !parsed.header.alg) {
+            console.log("Invalid token format", parsed);
             throw new Error("Invalid token format");
         }
         // get expires from the token
-        const expires = parsed.payload.exp;
+        const expires = (parsed.payload as jwts.JwtPayload).exp;
         if (!expires || typeof expires !== "number") {
             throw new Error("Token does not have an expiration time");
         }

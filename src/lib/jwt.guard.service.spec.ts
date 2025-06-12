@@ -16,7 +16,7 @@ describe("JWT Guard Service spec", () => {
     beforeAll(async () => {
         moduleRef = await Test.createTestingModule({
             imports: [
-                JwtGuardModule.forRoot({
+                JwtGuardModule.register({
                     secret: "test-secret",
                     redisUrl,
                 }),
@@ -74,8 +74,18 @@ describe("JWT Guard Service spec", () => {
             .auth(token, { type: "bearer" })
             .expect(200);
     });
+
+    it("private method should return 401 if token expired", async () => {
+        const token = await svc.signToken({ userId: 3 }, "1s");
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for token to expire
+        await request(app.getHttpServer())
+            .get("/jwt/private")
+            .auth(token, { type: "bearer" })
+            .expect(401);
+    });
+
     it("private method should return 401 with revoked token", async () => {
-        const token = await svc.signToken({ userId: 3 }, "1h");
+        const token = await svc.signToken({ userId: 4 }, "1h");
         await svc.revokeToken(token);
         await request(app.getHttpServer())
             .get("/jwt/private")

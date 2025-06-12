@@ -11,4 +11,14 @@ export class JWTGuardModuleOptions {
      * JWT Secret
      */
     secret: string = "";
+
+    /**
+     * Jwt Issuer
+     */
+    issuer?: string;
+
+    /**
+     * Jwt Audience
+     */
+    audience?: string;
 }
