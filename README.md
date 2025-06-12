@@ -29,37 +29,59 @@ npm i @leadinvr/jwt-guard
 
 # Quick Start
 
+### Register Option
+
+```ts
+// Module Options
+export class JWTGuardModuleOptions {
+    /**
+     * Redis URL for storing revoked tokens
+     * This URL is used to connect to a Redis instance where revoked tokens are stored.
+     * If not provided, the service will use in-memory storage.
+     * Example: "redis://localhost:6379" or "redis://username:password@localhost:6379"
+     * @default ""
+     */
+    redisUrl: string = "";
+    /**
+     * JWT Secret
+     */
+    secret: string = "";
+
+    /**
+     * Jwt Issuer
+     */
+    issuer?: string;
+
+    /**
+     * Jwt Audience
+     */
+    audience?: string;
+}
+```
+
 ### Register
 
-```js
+```ts
+JwtGuardModule.register({
+    redisUrl: "",
+    secret: "test-secret",
+    issuer: "test",
+    audience: "test",
+});
+
 JwtGuardModule.registerAsync({
-    autoRegister: true
-    inject: [ConfigService, CacheService],
-    useFactory: (configs: ConfigService, cache: CacheService) => {
-        const secret = configs.get<string>("JWT_SECRET");
-        Failed.onFalsy(secret, () => "JWT_SECRET cannot be null or undefined");
-        return {
-            jwtSecret: secret,
-            check: async token => {
-                if (await cache.isTokenRevoked(token)) {
-                    return false;
-                }
-                return true;
-            },
-        };
-    },
-}),
+    useFactory: () => ({
+        redisUrl: "",
+        secret: "test-secret",
+        issuer: "test",
+        audience: "test",
+    }),
+});
 ```
 
 ### If autoRegister is false, you need to add provider manually
 
-```js
-  providers: [
-        { provide: APP_GUARD, useClass: JwtAuthGuard },
-        ...
-    ]
-```
 
 # Trouble Shooting
 
--   If autoRegister, JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
+-   JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
