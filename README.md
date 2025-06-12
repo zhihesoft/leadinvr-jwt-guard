@@ -79,9 +79,6 @@ JwtGuardModule.registerAsync({
 });
 ```
 
-### If autoRegister is false, you need to add provider manually
-
-
 # Trouble Shooting
 
 -   JWT Guard Module should register before other guard providers, otherwise the payload may not inject correctly
