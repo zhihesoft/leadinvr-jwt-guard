@@ -15,10 +15,10 @@ export class JWTGuardModuleOptions {
     /**
      * Jwt Issuer
      */
-    issuer?: string;
+    issuer: string = "";
 
     /**
      * Jwt Audience
      */
-    audience?: string;
+    audience: string = "";
 }
